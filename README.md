@@ -46,11 +46,11 @@ sys     0m0.016s
 
 Because the HLL implementation uses randomly-generated numbers for hashing of input, this value can change between invocations:
 ```bash
-$ ./target/release/hll-cli -i input.txt
+$ ./hll-cli -i input.txt
 35679
-$ ./target/release/hll-cli -i input.txt
+$ ./hll-cli -i input.txt
 34991
-$ ./target/release/hll-cli -i input.txt
+$ ./hll-cli -i input.txt
 35662
 ```
 
