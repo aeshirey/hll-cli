@@ -1,0 +1,13 @@
+[package]
+name = "hll-cli"
+version = "0.1.0"
+authors = ["Adam Shirey <adam@shirey.ch>"]
+edition = "2018"
+
+[profile.release]
+lto = "fat"
+codegen-units = 1
+
+[dependencies]
+hyperloglog = { git = "https://github.com/aeshirey/rust-hyperloglog" }
+clap = "2.33.3"
