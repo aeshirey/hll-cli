@@ -1,4 +1,4 @@
-#is between more accurate re hll-util
+# hll-util
 Console utility to do a count distinct approximation using HyperLogLog (HLL). This util is analogous to calling `sort -u input.txt | wc -l`, but it requires very little memory because it doesn't need to store all unique values. It also uses an approximation, so the results are not exact.
 
 ## Examples
