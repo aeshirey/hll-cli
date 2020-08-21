@@ -13,17 +13,15 @@ fn main() -> Result<(), ()> {
                 .short("e")
                 .long("error-rate")
                 .value_name("ERROR_RATE")
-                .default_value("0.05")
-                .help("The acceptable error rate")
+                .default_value("0.01")
+                .help("The approximate allowable error rate")
                 .takes_value(true),
         )
         .arg(
             Arg::with_name("input")
-                .short("i")
-                .long("input")
+                .help("Specifies the input source. If omitted or '-', stdin is used.")
                 .default_value("-")
-                .help("Specifies the input source")
-                .takes_value(true),
+                .multiple(true),
         )
         .get_matches();
 
@@ -40,20 +38,30 @@ fn main() -> Result<(), ()> {
         return Err(());
     }
 
-    let input = matches.value_of("input").unwrap();
-
-    let hll = match input {
-        "-" => hll_from_stdin(error_rate),
-        filename => hll_from_file(filename, error_rate)?,
+    //let input = matches.value_of("input").unwrap();
+    let inputs = match matches.values_of("input") {
+        Some(values) => values,
+        None => {
+            println!("No input files specified");
+            return Err(());
+        }
     };
+
+    let mut hll = HyperLogLog::<String>::new(error_rate);
+
+    for input in inputs {
+        match input {
+            "-" => process_stdin(&mut hll),
+            filename => process_file(&mut hll, filename)?,
+        }
+    }
 
     println!("{}", hll.len().round() as u64);
 
     Ok(())
 }
 
-fn hll_from_stdin(error_rate: f64) -> HyperLogLog<String> {
-    let mut hll = HyperLogLog::new(error_rate);
+fn process_stdin(hll: &mut HyperLogLog<String>) {
     let eols: &[_] = &['\r', '\n'];
     loop {
         let mut input = String::new();
@@ -65,13 +73,10 @@ fn hll_from_stdin(error_rate: f64) -> HyperLogLog<String> {
             _ => break,
         }
     }
-
-    hll
 }
 
-fn hll_from_file(filename: &str, error_rate: f64) -> Result<HyperLogLog<String>, ()> {
+fn process_file(hll: &mut HyperLogLog<String>, filename: &str) -> Result<(), ()> {
     const CAPACITY: usize = 1024;
-    let mut hll = HyperLogLog::new(error_rate);
 
     let in_fh = File::open(filename).map_err(|_e| ())?;
     let in_buf = BufReader::with_capacity(CAPACITY, in_fh);
@@ -81,5 +86,5 @@ fn hll_from_file(filename: &str, error_rate: f64) -> Result<HyperLogLog<String>,
         hll.insert(&line);
     }
 
-    Ok(hll)
+    Ok(())
 }

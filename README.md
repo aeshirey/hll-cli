@@ -1,12 +1,12 @@
 # hll-util
-Console utility to do a count distinct approximation using HyperLogLog (HLL). This util is analogous to calling `sort -u input.txt | wc -l`, but it requires very little memory because it doesn't need to store all unique values. It also uses an approximation, so the results are not exact.
+Console utility to do a count distinct approximation using HyperLogLog (HLL). This util is analogous to calling `sort -u input.txt | wc -l`, but it requires very little memory because it doesn't need to store all unique values. The accuracy of results depend on the specified error rate.
 
 ## Examples
 First, consider a reasonably large input of different values. We will generate one million values between 0 and 9999 for testing:
 
 ```bash
 $ for i in `seq 1000000`; do echo $(($RANDOM % 10000)); done > input.txt
- ls -lh input.txt
+$ ls -lh input.txt
 -rwxrwxrwx 1 adam adam 5.4M Aug 18 08:48 input.txt
 $ wc -l input.txt
 1000000 input.txt
