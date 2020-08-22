@@ -1,5 +1,5 @@
 [package]
-name = "hll-cli"
+name = "hll"
 version = "0.1.0"
 authors = ["Adam Shirey <adam@shirey.ch>"]
 edition = "2018"
