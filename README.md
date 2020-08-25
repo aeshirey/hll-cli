@@ -69,3 +69,55 @@ sys     0m0.063s
 ```
 
 The trade-off for more accurate results is a larger memory footprint to store the probabilistic data structure used by HLL. You also cannot decrease the error rate indefinitely - you will reach a point where the math breaks down and thus the underlying implementation's assertions will fail.
+
+## CSV-formatted input
+`hll` can also parse delimited (eg, comma-separated, pipe-separated) files and count column independently. First, generating a one million record, three-column CSV file:
+
+```bash
+for i in `seq 1000000`; do echo $(($RANDOM % 10000)),$(($RANDOM % 10000)),$(($RANDOM % 10000)); done > input.csv
+```
+
+We can use GNU utils or `hll` to count or estimate the number of distinct rows, as before:
+
+```bash
+$ time sort -u input.csv | wc -l
+1000000
+
+real    0m1.428s
+user    0m3.406s
+sys     0m0.234s
+
+$ time ./target/release/hll input.csv
+982319
+
+real    0m0.173s
+user    0m0.094s
+sys     0m0.047s
+```
+
+But we can also use the `--format csv` argument to have `hll` look at columns individually:
+
+```bash
+$ time ./target/release/hll input.csv --format csv
+7097,10076,9913
+
+real    0m0.250s
+user    0m0.203s
+sys     0m0.047s
+```
+
+If the input has a header, provide the `-h` flag to not count the header row's values and to output the header row with its counts:
+
+```bash
+$ head -5 input.csv
+Foo,Bar,Baz
+517,255,5392
+1864,4873,4816
+8643,119,7987
+3030,3432,1536
+
+$ ./target/release/hll --format csv input.csv -h
+Foo,Bar,Baz
+9302,10221,9754
+```
+
