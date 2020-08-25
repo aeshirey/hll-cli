@@ -95,9 +95,7 @@ each column independently. You may also use "#,
         "csv" => csv::process_csv(&inputs, error_rate, &matches)?,
         "json" => todo!("json formatted input"),
         "parquet" => todo!("parquet formatted input"),
-        _ => {
-            text::process_text(&inputs, error_rate)?;
-        }
+        _ => text::process_text(&inputs, error_rate)?
     }
 
     Ok(())

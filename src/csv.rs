@@ -31,16 +31,7 @@ pub fn process_csv(
     let mut header: Option<Vec<String>> = None;
 
     for input in inputs {
-        let result = process_csv_file(input, &mut hlls, error_rate, &args)?;
-
-        if args.header {
-            match (&header, result) {
-                (None, Some(hdr)) => {
-                    header.replace(hdr);
-                }
-                _ => {}
-            }
-        }
+        process_csv_file(input, &mut hlls, error_rate, &args, &mut header)?;
     }
 
     if let Some(cols) = header {
@@ -64,17 +55,21 @@ fn process_csv_file(
     hlls: &mut Vec<HyperLogLog<String>>,
     error_rate: f64,
     args: &CsvArgs,
-) -> Result<Option<Vec<String>>, ()> {
+    mut header: &mut Option<Vec<String>>,
+) -> Result<(), ()> {
     let mut reader = ReaderBuilder::new()
         .has_headers(args.header)
         .delimiter(args.delimiter)
         .from_path(input)
         .map_err(|_| ())?;
 
-    let header = match (&args.header, &reader.headers()) {
-        (true, Ok(header)) => Some(header.iter().map(|s| s.to_string()).collect()),
-        _ => None,
-    };
+    match (&args.header, &mut header, &reader.headers()) {
+        (true, None, Ok(reader_header)) => {
+            let owned = reader_header.iter().map(|s| s.to_string()).collect();
+            header.replace(owned);
+        }
+        _ => {}
+    }
 
     for line in reader.records() {
         let record = line.map_err(|_| ())?;
@@ -88,5 +83,5 @@ fn process_csv_file(
         }
     }
 
-    Ok(header)
+    Ok(())
 }
