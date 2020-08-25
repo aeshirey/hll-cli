@@ -36,7 +36,7 @@ sys     0m0.266s
 
 Using `hll`, we can do an _estimation_ of the counts:
 ```bash
-$ time ./hll -i input.txt
+$ time ./hll input.txt
 30113
 
 real    0m0.119s
@@ -46,11 +46,11 @@ sys     0m0.016s
 
 Because the HLL implementation uses randomly-generated numbers for hashing of input, this value can change between invocations:
 ```bash
-$ ./hll -i input.txt
+$ ./hll input.txt
 35679
-$ ./hll -i input.txt
+$ ./hll input.txt
 34991
-$ ./hll -i input.txt
+$ ./hll input.txt
 35662
 ```
 
@@ -60,7 +60,7 @@ In this example, HLL is about 10x faster than `sort -u`; for even larger inputs,
 You can reign-in the error by specifying the error rate to the utility: `-e {error_rate}`. For example:
 
 ```bash
-$ time ./hll -i input.txt  -e 0.005
+$ time ./hll input.txt  -e 0.005
 32358
 
 real    0m0.107s

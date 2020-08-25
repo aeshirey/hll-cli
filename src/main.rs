@@ -1,7 +1,7 @@
 use clap::{App, Arg};
-use hyperloglog::HyperLogLog;
-use std::fs::File;
-use std::io::{BufRead, BufReader};
+
+mod csv;
+mod text;
 
 fn main() -> Result<(), ()> {
     let matches = App::new("HyperLogLog CLI")
@@ -16,6 +16,49 @@ fn main() -> Result<(), ()> {
                 .default_value("0.01")
                 .help("The approximate allowable error rate")
                 .takes_value(true),
+        )
+        .arg(
+            Arg::with_name("format")
+            .short("f")
+            .long("format")
+            .default_value("text")
+                .help("Input file format. Omit for line-based text.")
+                .long_help(
+                    r#"Input file format. Use 'csv' to split the input text into columns, counting
+each column independently. You may also use "#,
+                )
+                .required(false),
+        )
+        .arg(
+                Arg::with_name("header")
+                    .short("h")
+                    .long("header")
+                    .multiple(false)
+                    .takes_value(false)
+                    .help("Indicates the input has a header. This flag is implicitly set. Use -H to disable header."),
+        )
+        .arg(
+                Arg::with_name("no-header")
+                    .short("H")
+                    .long("no-header")
+                    .multiple(false)
+                    .takes_value(false)
+                    .help("Indicates the input does not have a header"),
+        )
+        .arg(
+                Arg::with_name("delimiter")
+                    .short("d")
+                    .long("delimiter")
+                    .default_value(",")
+                    .multiple(false)
+                    .help("The column delimiter. Default is ','")
+        )
+        .arg(
+                Arg::with_name("columns")
+                    .short("c")
+                    .long("columns")
+                    .multiple(false)
+                    .help("A list of column names, numbers, or number ranges")
         )
         .arg(
             Arg::with_name("input")
@@ -38,7 +81,6 @@ fn main() -> Result<(), ()> {
         return Err(());
     }
 
-    //let input = matches.value_of("input").unwrap();
     let inputs = match matches.values_of("input") {
         Some(values) => values,
         None => {
@@ -47,43 +89,15 @@ fn main() -> Result<(), ()> {
         }
     };
 
-    let mut hll = HyperLogLog::<String>::new(error_rate);
+    let inputs: Vec<&str> = inputs.collect();
 
-    for input in inputs {
-        match input {
-            "-" => process_stdin(&mut hll),
-            filename => process_file(&mut hll, filename)?,
+    match matches.value_of("format").unwrap() {
+        "csv" => csv::process_csv(&inputs, error_rate, &matches)?,
+        "json" => todo!("json formatted input"),
+        "parquet" => todo!("parquet formatted input"),
+        _ => {
+            text::process_text(&inputs, error_rate)?;
         }
-    }
-
-    println!("{}", hll.len().round() as u64);
-
-    Ok(())
-}
-
-fn process_stdin(hll: &mut HyperLogLog<String>) {
-    let eols: &[_] = &['\r', '\n'];
-    loop {
-        let mut input = String::new();
-        match std::io::stdin().read_line(&mut input) {
-            Ok(n) if n > 0 => {
-                let trimmed = input.trim_end_matches(eols).to_string();
-                hll.insert(&trimmed)
-            }
-            _ => break,
-        }
-    }
-}
-
-fn process_file(hll: &mut HyperLogLog<String>, filename: &str) -> Result<(), ()> {
-    const CAPACITY: usize = 1024;
-
-    let in_fh = File::open(filename).map_err(|_e| ())?;
-    let in_buf = BufReader::with_capacity(CAPACITY, in_fh);
-
-    for line in in_buf.lines() {
-        let line = line.unwrap();
-        hll.insert(&line);
     }
 
     Ok(())

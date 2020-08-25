@@ -11,6 +11,6 @@ panic = "abort"
 
 [dependencies]
 hyperloglog = { git = "https://github.com/aeshirey/rust-hyperloglog" }
-#hyperloglogplus = "*"
 siphasher = "0.3.3"
 clap = "2.33.3"
+csv = "1.1.3"
