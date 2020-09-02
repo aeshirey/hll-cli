@@ -54,9 +54,52 @@ $ ./hll input.txt
 35662
 ```
 
-In this example, HLL is about 10x faster than `sort -u`; for even larger inputs, the time difference is likely to be even greater.
+In this example, HLL is about 10x faster than `sort -u`.
 
-## Error Rate
+## Larger-scale tests
+To test larger inputs, we generate two files of 100M records each, one with values up to 10k and one up to 100k:
+
+```bash
+$ for i in `seq 100000000`; do echo $(($RANDOM % 10000)); done > input2.txt
+$ for i in `seq 100000000`; do echo $(($RANDOM % 100000)); done > input3.txt
+```
+
+We can then compare `sort -u | wc -l` to `hll`:
+
+```bash
+$ time sort -u input2.txt | wc -l
+10001
+
+real    1m0.775s
+user    5m4.813s
+sys     0m17.344s
+$ time ./hll -e 0.01 input2.txt
+10423
+
+real    0m6.895s
+user    0m4.578s
+sys     0m2.313s
+```
+
+```bash
+$ time sort -u input3.txt | wc -l
+100001
+
+real    1m8.427s
+user    5m53.000s
+sys     0m15.359s
+$ time ./hll -e 0.01 input3.txt
+103021
+
+real    0m7.254s
+user    0m5.063s
+sys     0m2.188s
+```
+
+These tests show a consistent 10x wall time speedup. It's also interesting to note the CPU time for the GNU utils is almost 60x as much as `hll`.
+
+
+## Error rate
 You can reign-in the error by specifying the error rate to the utility: `-e {error_rate}`. For example:
 
 ```bash
